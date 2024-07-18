@@ -120,19 +120,22 @@ function ChatComponent({ user }) {
   async function handleChatRag() {
     if (text.trim() !== "") {
       const newUserMessage = { sender: "user", content: text };
-      setChatMessages((prevMessages) => [...prevMessages, newUserMessage]);
-      setText("");
+  
+      // Create a local copy of chat history
+      const updatedChatMessages = [...chatMessages, newUserMessage];
+      setChatMessages(updatedChatMessages); // Update state
 
-      const history = chatMessages;
-
+      console.log(updatedChatMessages)
+  
       const requestBody = {
-        chat_history: history.map((entry) => ({
-          role: entry.role || "user", // Default to "user" if role is not provided
+        chat_history: updatedChatMessages.map((entry) => ({
+          role: entry.sender, // Assuming 'sender' is either 'user' or 'bot'
           content: entry.content,
         })),
       };
-
+  
       try {
+        console.log('calling chat endpoint...');
         setChatLoading(true);
         const response = await axios.post(
           "https://nina-render.onrender.com/chat",
@@ -144,16 +147,12 @@ function ChatComponent({ user }) {
             },
           }
         );
-
-        // if (!response.ok) {
-        //   throw new Error("Network response was not ok");
-        // }
-
+  
         if (response) {
           console.log(response.data.content);
-
+  
           const text = response.data.content;
-
+  
           setChatMessages((prev) => [
             ...prev,
             { sender: "bot", content: text },
@@ -163,8 +162,11 @@ function ChatComponent({ user }) {
       } catch (error) {
         console.error("Error in streaming chat response:", error);
       }
+      setText(""); // Clear input text
     }
   }
+  
+  
 
   async function handleChatNoStream() {
     if (text.trim() !== "") {
