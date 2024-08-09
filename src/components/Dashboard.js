@@ -6,10 +6,17 @@ import ChatComponent from "./ChatComponent";
 import { useRouter } from "next/router";
 import handleSignOut from "@/utils/HandleSignOut";
 import Link from "next/link";
+import FoodSearch from "./FoodSearch";
+import UserPreferences from "./UserPreferences";
+import axios from "axios"
+
 
 function Dashboard({ user }) {
   const [showSidebar, setShowSidebar] = useState(false);
   const [text, setText] = useState("");
+  const [selectedView, setSelectedView] = useState("chat");
+
+  
   const sidebarRef = useRef();
 
   console.log(user);
@@ -133,6 +140,28 @@ function Dashboard({ user }) {
               {user && user.email}
             </span>
           </div>
+
+          <div className={`px-2 py-1 w-full hover:bg-stone-100 rounded-md cursor-pointer ${selectedView == "chat" && "bg-stone-100"}`} onClick={() => setSelectedView("chat")}>
+            <span className="text-sm  w-full truncate">
+              Chatbot
+            </span>
+          </div>
+
+          <div className={`px-2 py-1 w-full hover:bg-stone-100 rounded-md cursor-pointer ${selectedView == "food-search" && "bg-stone-100"}`} onClick={() => setSelectedView("food-search")}>
+            <span className="text-sm  w-full truncate">
+              Food Search
+            </span>
+          </div>
+
+          <div className={`px-2 py-1 w-full hover:bg-stone-100 rounded-md cursor-pointer ${selectedView == "my-profile" && "bg-stone-100"}`} onClick={() => setSelectedView("my-profile")}>
+            <span className="text-sm  w-full truncate">
+              My Profile
+            </span>
+          </div>
+
+
+
+
           <div className="fixed bottom-0 left-0 w-[250px]">
             <div className="p-5">
               <Link href="https://tally.so/r/waGA22" target="_blank">
@@ -157,8 +186,10 @@ function Dashboard({ user }) {
       </div>
 
       <div className="w-full lg-px-0 px-5">
-        <div className="lg:max-w-3xl lg:mx-auto ">
-          <ChatComponent />
+        <div className="lg:max-w-3xl lg:mx-auto pt-24">
+          {selectedView == "chat" &&  <ChatComponent />}
+          {selectedView == "food-search" &&  <FoodSearch />}
+          {selectedView == "my-profile" &&  <UserPreferences userId={user.id} />}
         </div>
       </div>
     </div>

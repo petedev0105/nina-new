@@ -8,6 +8,7 @@ import readUserSession from "../lib/actions";
 
 function LandingPage() {
   const [user, setUser] = useState(null);
+  
   const items = [
     {
       key: "1",
