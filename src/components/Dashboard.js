@@ -9,12 +9,16 @@ import Link from "next/link";
 import FoodSearch from "./FoodSearch";
 import UserPreferences from "./UserPreferences";
 import axios from "axios"
+import UserPreferencesModal from "./UserPreferencesModal";
+import { userAtom } from "@/app/jotai/user/atoms";
+import { useAtom } from "jotai";
 
 
-function Dashboard({ user }) {
+function Dashboard() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [text, setText] = useState("");
   const [selectedView, setSelectedView] = useState("chat");
+  const [user, setUser] = useAtom(userAtom);
 
   
   const sidebarRef = useRef();
@@ -58,6 +62,7 @@ function Dashboard({ user }) {
 
   return (
     <div className="lg:flex">
+      <UserPreferencesModal />
       {showSidebar && (
         <div
           ref={sidebarRef}
@@ -108,7 +113,7 @@ function Dashboard({ user }) {
       <div className="lg:block hidden">
         <div
           ref={sidebarRef}
-          className="w-[250px] sticky top-0 h-screen w-1/6 border-r bg-white z-50 p-5"
+          className="w-[250px] sticky top-0 h-screen w-1/6 border-r bg-white p-5"
         >
           {/* Sidebar content goes here */}
           <div className="space-y-5 sticky top-3">
@@ -189,7 +194,7 @@ function Dashboard({ user }) {
         <div className="lg:max-w-3xl lg:mx-auto pt-24">
           {selectedView == "chat" &&  <ChatComponent />}
           {selectedView == "food-search" &&  <FoodSearch />}
-          {selectedView == "my-profile" &&  <UserPreferences userId={user.id} />}
+          {selectedView == "my-profile" &&  <UserPreferences />}
         </div>
       </div>
     </div>

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { userOnboardedAtom, userAtom } from "@/app/jotai/user/atoms";
+import { useAtom } from "jotai";
 
-const UserInformationForm = ({ userId }) => {
+const UserInformationForm = () => {
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
@@ -24,91 +26,136 @@ const UserInformationForm = ({ userId }) => {
   const [consent, setConsent] = useState(false);
   const [dataSharing, setDataSharing] = useState(false);
 
+  const [user, setUser] = useAtom(userAtom);
+  
+
+  const [userOnboarded, setUserOnboarded] = useAtom(userOnboardedAtom);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.post(`/api/get-user-information`, {
-          userId: userId,
+          userId: user.id,
         });
-
+  
         if (response.data.message === "no-rows") {
           // No rows found, handle accordingly (do nothing)
           return;
         }
-
+  
         const data = response.data;
-
+  
         console.log("get user information response is: ", response);
-
-        setName(data.name);
-        setAge(data.age);
-        setGender(data.gender);
-        setHeight(data.height);
-        setWeight(data.weight);
-        setActivityLevel(data.activity_level);
-        setGoals(data.goals);
-        setActivityType(data.activity_type);
-        setMedicalConditions(data.medical_conditions);
-        setAllergies(data.allergies);
-        setDietaryPreferences(data.dietary_preferences);
-        setSleep(data.sleep);
-        setStressLevel(data.stress_level);
-        setWorkoutHistory(data.workout_history);
-        setDietaryIntake(data.dietary_intake);
-        setWaterIntake(data.water_intake);
-        setSupplements(data.supplements);
-        setHeartRate(data.heart_rate);
-        setDailySteps(data.daily_steps);
-        setConsent(data.consent);
-        setDataSharing(data.data_sharing);
+  
+        // Basic Info
+        setName(data.basic_info.name);
+        setAge(data.basic_info.age);
+        setGender(data.basic_info.gender);
+        setHeight(data.basic_info.height);
+        setWeight(data.basic_info.weight);
+  
+        // Health & Fitness
+        setActivityLevel(data.health_fitness.activity_level);
+        setGoals(data.health_fitness.goals);
+        setActivityType(data.health_fitness.activity_types);
+        setMedicalConditions(data.health_fitness.medical_conditions);
+        setAllergies(data.health_fitness.allergies);
+        setDietaryPreferences(data.health_fitness.dietary_preferences);
+  
+        // Lifestyle
+        setSleep(data.lifestyle.sleep);
+        setStressLevel(data.lifestyle.stress_level);
+  
+        // Fitness & Nutrition Data
+        setWorkoutHistory(data.fitness_nutrition_data.workout_history);
+        setDietaryIntake(data.fitness_nutrition_data.dietary_intake);
+        setWaterIntake(data.fitness_nutrition_data.water_intake);
+        setSupplements(data.fitness_nutrition_data.supplement_use);
+  
+        // Advanced Data
+        setHeartRate(data.advanced_data.heart_rate);
+        setDailySteps(data.advanced_data.daily_steps);
+  
+        // Privacy Consent
+        setConsent(data.privacy_consent.data_collection_consent);
+        setDataSharing(data.privacy_consent.data_sharing_preferences);
+  
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
-
+  
     fetchData();
-  }, [userId]);
+  }, [user.id]);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    const formData = {
-      name,
-      age,
-      gender,
-      height,
-      weight,
-      activity_level: activityLevel,
-      goals,
-      activity_type: activityType,
-      medical_conditions: medicalConditions,
-      allergies,
-      dietary_preferences: dietaryPreferences,
-      sleep,
-      stress_level: stressLevel,
-      workout_history: workoutHistory,
-      dietary_intake: dietaryIntake,
-      water_intake: waterIntake,
-      supplements,
-      heart_rate: heartRate,
-      daily_steps: dailySteps,
-      consent,
-      data_sharing: dataSharing,
-    };
+    const userId = user.id;
+    if (
+      name &&
+      age &&
+      gender &&
+      height &&
+      weight &&
+      activityLevel &&
+      goals &&
+      activityType &&
+      medicalConditions &&
+      allergies &&
+      dietaryPreferences &&
+      sleep &&
+      stressLevel &&
+      workoutHistory &&
+      dietaryIntake &&
+      waterIntake &&
+      supplements &&
+      heartRate &&
+      dailySteps &&
+      consent &&
+      dataSharing
+    ) {
+      e.preventDefault();
+      const formData = {
+        name,
+        age,
+        gender,
+        height,
+        weight,
+        activity_level: activityLevel,
+        goals,
+        activity_type: activityType,
+        medical_conditions: medicalConditions,
+        allergies,
+        dietary_preferences: dietaryPreferences,
+        sleep,
+        stress_level: stressLevel,
+        workout_history: workoutHistory,
+        dietary_intake: dietaryIntake,
+        water_intake: waterIntake,
+        supplements,
+        heart_rate: heartRate,
+        daily_steps: dailySteps,
+        consent,
+        data_sharing: dataSharing,
+      };
 
-    try {
-      const response = await axios.post("/api/save-user-information", {
-        userId,
-        formData
-      });
+      try {
+        const response = await axios.post("/api/save-user-information", {
+          userId,
+          formData,
+        });
 
-      if (response.status === 200) {
-        console.log("Data saved successfully");
-        console.log(response);
-      } else {
-        console.error("Error saving data:", response.data.error);
+        if (response.status === 200) {
+          console.log("Data saved successfully");
+          console.log(response);
+          setUserOnboarded(true);
+        } else {
+          console.error("Error saving data:", response.data.error);
+        }
+      } catch (error) {
+        console.error("Error saving data:", error);
       }
-    } catch (error) {
-      console.error("Error saving data:", error);
+    } else {
+      alert("Please fill in all fields");
     }
   };
 
@@ -288,7 +335,7 @@ const UserInformationForm = ({ userId }) => {
       </section>
 
       <section>
-        <h3 className="text-lg font-semibold">📊 Advanced Data (optional)</h3>
+        <h3 className="text-lg font-semibold">📊 Advanced Data</h3>
         <label className="block">
           Heart Rate
           <input

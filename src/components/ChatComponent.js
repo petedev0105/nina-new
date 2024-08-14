@@ -120,25 +120,60 @@ function ChatComponent({ user }) {
   async function handleChatRag() {
     if (text.trim() !== "") {
       const newUserMessage = { sender: "user", content: text };
-  
+
       // Create a local copy of chat history
       const updatedChatMessages = [...chatMessages, newUserMessage];
       setChatMessages(updatedChatMessages); // Update state
 
-      console.log(updatedChatMessages)
-  
-      const requestBody = {
-        chat_history: updatedChatMessages.map((entry) => ({
-          role: entry.sender, // Assuming 'sender' is either 'user' or 'bot'
-          content: entry.content,
-        })),
-      };
-  
+      console.log(updatedChatMessages);
+
       try {
-        console.log('calling chat endpoint...');
+        console.log("calling chat endpoint...");
         setChatLoading(true);
+        const requestBody = {
+          user_info: {
+            basic_info: {
+              name: "Ethan Trang",
+              age: 18,
+              gender: "Male",
+              height: 170,
+              weight: 64,
+            },
+            health_fitness: {
+              activity_level: "moderately active (3-5 days)",
+              goals: "Muscle gain, edurance",
+              activity_types: "Strength Training",
+              medical_conditions: "None",
+              allergies: "None",
+              dietary_preferences: "Vegan",
+            },
+            lifestyle: {
+              sleep: "8+ hours",
+              stress_level: 5,
+            },
+            fitness_nutrition_data: {
+              workout_history: "3 days a week strength training",
+              dietary_intake: "3 meals a day",
+              water_intake: "2-3 liters/day (standard)",
+              supplement_use: "None",
+            },
+            advanced_data: {
+              heart_rate: "",
+              daily_steps: "",
+            },
+            privacy_consent: {
+              data_collection_consent: true,
+              data_sharing_preferences: true,
+            },
+          },
+          chat_history: updatedChatMessages.map((entry) => ({
+            role: entry.role || "user", // Default to "user" if role is not provided
+            content: entry.content,
+          })),
+        };
+
         const response = await axios.post(
-          "https://nina-render.onrender.com/chat",
+          "https://nina-render.onrender.com/chat/",
           requestBody,
           {
             headers: {
@@ -147,16 +182,17 @@ function ChatComponent({ user }) {
             },
           }
         );
-  
+
         if (response) {
-          console.log(response.data.content);
-  
+          // console.log(response.data.content);
+
           const text = response.data.content;
-  
+
           setChatMessages((prev) => [
             ...prev,
             { sender: "bot", content: text },
           ]);
+          // console.log("response from chat rag: ", response);
           setChatLoading(false);
         }
       } catch (error) {
@@ -165,8 +201,6 @@ function ChatComponent({ user }) {
       setText(""); // Clear input text
     }
   }
-  
-  
 
   async function handleChatNoStream() {
     if (text.trim() !== "") {
