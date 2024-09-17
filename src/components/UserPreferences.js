@@ -105,11 +105,8 @@ const UserInformationForm = () => {
       sleep &&
       stressLevel &&
       workoutHistory &&
-      dietaryIntake &&
       waterIntake &&
       supplements &&
-      heartRate &&
-      dailySteps &&
       consent &&
       dataSharing
     ) {
@@ -129,13 +126,14 @@ const UserInformationForm = () => {
         sleep,
         stress_level: stressLevel,
         workout_history: workoutHistory,
-        dietary_intake: dietaryIntake,
         water_intake: waterIntake,
         supplements,
-        heart_rate: heartRate,
-        daily_steps: dailySteps,
         consent,
         data_sharing: dataSharing,
+        // Optional fields
+        dietary_intake: dietaryIntake || null,
+        heart_rate: heartRate || null,
+        daily_steps: dailySteps || null,
       };
 
       try {
@@ -155,7 +153,7 @@ const UserInformationForm = () => {
         console.error("Error saving data:", error);
       }
     } else {
-      alert("Please fill in all fields");
+      alert("Please fill in all required fields");
     }
   };
 
@@ -218,15 +216,19 @@ const UserInformationForm = () => {
         </h3>
         <label className="block">
           Activity Level
-          <input
-            type="text"
+          <select
             value={activityLevel}
             onChange={(e) => setActivityLevel(e.target.value)}
             className="mt-1 p-2 border rounded w-full"
-          />
+          >
+            <option value="">Select activity level</option>
+            <option value="Lightly Active">Lightly Active (1-2 sessions / week)</option>
+            <option value="Moderately Active">Moderately Active (3-5 sessions / week)</option>
+            <option value="Highly Active">Highly Active (6-7 sessions / week)</option>
+          </select>
         </label>
         <label className="block mt-2">
-          Goals
+          Fitness Goals (Describe as best as you can)
           <input
             type="text"
             value={goals}
@@ -262,7 +264,7 @@ const UserInformationForm = () => {
           />
         </label>
         <label className="block mt-2">
-          Dietary Preferences
+        Dietary Preferences (what kind of foods do you like?)
           <input
             type="text"
             value={dietaryPreferences}
@@ -297,7 +299,7 @@ const UserInformationForm = () => {
       <section>
         <h3 className="text-lg font-semibold">🥗 Fitness and Nutrition Data</h3>
         <label className="block">
-          Workout History
+        Workout history (how long have you been physically active?)
           <input
             type="text"
             value={workoutHistory}
@@ -306,7 +308,7 @@ const UserInformationForm = () => {
           />
         </label>
         <label className="block mt-2">
-          Dietary Intake
+        Caloric Intake (optional)
           <input
             type="text"
             value={dietaryIntake}
@@ -335,9 +337,9 @@ const UserInformationForm = () => {
       </section>
 
       <section>
-        <h3 className="text-lg font-semibold">📊 Advanced Data</h3>
+        <h3 className="text-lg font-semibold">📊 Advanced Data (Optional)</h3>
         <label className="block">
-          Heart Rate
+          Heart Rate (optional)
           <input
             type="text"
             value={heartRate}
@@ -346,7 +348,7 @@ const UserInformationForm = () => {
           />
         </label>
         <label className="block mt-2">
-          Estimated Daily Steps Tracking
+          Estimated Daily Steps Tracking (optional)
           <input
             type="text"
             value={dailySteps}
