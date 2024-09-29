@@ -3,13 +3,15 @@ import ReactMarkdown from "react-markdown";
 import TextareaAutosize from "react-textarea-autosize";
 import rehypeRaw from "rehype-raw";
 import axios from "axios";
+import { userInformationAtom } from "@/app/jotai/user/atoms";
+import { useAtom } from "jotai";
 
 function ChatComponent({ user }) {
   const [text, setText] = useState("");
   const [chatMessages, setChatMessages] = useState([]);
-  // const [selectedChatId, setSelectedChatId] = useState
   const [chatLoading, setChatLoading] = useState(false);
   const chatContainerRef = useRef(null);
+  const [userInformation] = useAtom(userInformationAtom);
 
   async function handleFetchChatMessages() {}
 
@@ -127,45 +129,15 @@ function ChatComponent({ user }) {
 
       console.log(updatedChatMessages);
 
+      // const userInfo = userInformation;
+
+      // console.log(requestBody);
+
       try {
         console.log("calling chat endpoint...");
         setChatLoading(true);
         const requestBody = {
-          user_info: {
-            basic_info: {
-              name: "Ethan Trang",
-              age: 18,
-              gender: "Male",
-              height: 170,
-              weight: 64,
-            },
-            health_fitness: {
-              activity_level: "moderately active (3-5 days)",
-              goals: "Muscle gain, edurance",
-              activity_types: "Strength Training",
-              medical_conditions: "None",
-              allergies: "None",
-              dietary_preferences: "Vegan",
-            },
-            lifestyle: {
-              sleep: "8+ hours",
-              stress_level: 5,
-            },
-            fitness_nutrition_data: {
-              workout_history: "3 days a week strength training",
-              dietary_intake: "3 meals a day",
-              water_intake: "2-3 liters/day (standard)",
-              supplement_use: "None",
-            },
-            advanced_data: {
-              heart_rate: "",
-              daily_steps: "",
-            },
-            privacy_consent: {
-              data_collection_consent: true,
-              data_sharing_preferences: true,
-            },
-          },
+          user_info: userInformation,
           chat_history: updatedChatMessages.map((entry) => ({
             role: entry.role || "user", // Default to "user" if role is not provided
             content: entry.content,
@@ -268,7 +240,22 @@ function ChatComponent({ user }) {
                     <span>Answer</span>
                   </div>
                   <div>
-                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    {/* <ReactMarkdown>{msg.content}</ReactMarkdown> */}
+                    <ReactMarkdown
+                      className="prose w-full max-w-screen-lg break-words pr-5 text-sm dark:prose-invert prose-p:leading-relaxed"
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        a: (props) => (
+                          <a
+                            {...props}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          />
+                        ),
+                      }}
+                    >
+                      {msg.content}
+                    </ReactMarkdown>
                   </div>
                 </div>
               )}

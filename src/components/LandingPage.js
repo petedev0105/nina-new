@@ -164,21 +164,6 @@ function LandingPage() {
         </div>
       </div>
 
-      <section className="pt-48 space-y-5">
-        <div>
-          <span className="font-medium text-3xl">Our Mission</span>
-        </div>
-        <div>
-          <p className="text-lg text-stone-600">
-            NINA is your dedicated nutrition companion, designed to make healthy
-            eating choices simple through advanced AI technology and an
-            intuitive interface. Whether you need tailored dietary advice, meal
-            suggestions, or to track your nutrition journey, NINA empowers your
-            decisions every step of the way.
-          </p>
-        </div>
-      </section>
-
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-10 pt-48 items-center">
         <div className="space-y-5 order-2 lg:order-1">
           <div>
@@ -199,15 +184,14 @@ function LandingPage() {
         <div className="rounded-md w-full h-72 bg-stone-200 order-3"></div>
         <div className="space-y-5 order-4">
           <div>
-            <span className="font-medium text-2xl">Our Mission</span>
+            <span className="font-medium text-2xl">Our Vision</span>
           </div>
           <div>
             <p>
-              NINA is your personalized nutrition companion, designed to
-              simplify healthy eating choices through advanced AI technology and
-              intuitive design. Whether you&apos;re looking for tailored dietary
-              advice, meal suggestions, or simply tracking your nutrition
-              journey, NINA is here to empower your decisions.
+              We envision a world where everyone has access to personalized nutrition guidance,
+              leading to healthier communities and improved quality of life. Through continuous
+              innovation and user-centric design, we aim to make NINA an indispensable tool
+              in everyone&apos;s health journey.
             </p>
           </div>
         </div>
