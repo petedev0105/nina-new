@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import TextareaAutosize from "react-textarea-autosize";
 import rehypeRaw from "rehype-raw";
 import axios from "axios";
 import { userInformationAtom } from "@/app/jotai/user/atoms";
 import { useAtom } from "jotai";
+import { ErrorBoundary } from 'react-error-boundary';
+import remarkGfm from "remark-gfm";
 
 function ChatComponent({ user }) {
   const [text, setText] = useState("");
@@ -51,8 +53,8 @@ function ChatComponent({ user }) {
     }
   }, [chatMessages]);
 
-  async function handleChat() {
-    if (text.trim() != "") {
+  const handleChat = useCallback(async () => {
+    if (text.trim() !== "") {
       const newUserMessage = { sender: "user", content: text };
       setChatMessages((prevMessages) => [...prevMessages, newUserMessage]);
       const prompt = text;
@@ -115,11 +117,15 @@ function ChatComponent({ user }) {
         }
       } catch (error) {
         console.error("Error in streaming chat response:", error);
+        setChatMessages((prev) => [
+          ...prev,
+          { sender: "bot", content: "Sorry, an error occurred. Please try again." }
+        ]);
       }
     }
-  }
+  }, [text, chatMessages]);
 
-  async function handleChatRag() {
+  const handleChatRag = useCallback(async () => {
     if (text.trim() !== "") {
       const newUserMessage = { sender: "user", content: text };
 
@@ -168,11 +174,17 @@ function ChatComponent({ user }) {
           setChatLoading(false);
         }
       } catch (error) {
-        console.error("Error in streaming chat response:", error);
+        console.error("Error in chat RAG response:", error);
+        setChatMessages((prev) => [
+          ...prev,
+          { sender: "bot", content: "Sorry, an error occurred. Please try again." }
+        ]);
+      } finally {
+        setChatLoading(false);
       }
       setText(""); // Clear input text
     }
-  }
+  }, [text, chatMessages, userInformation]);
 
   async function handleChatNoStream() {
     if (text.trim() !== "") {
@@ -225,118 +237,146 @@ function ChatComponent({ user }) {
 
   if (chatMessages.length > 0)
     return (
-      <div className="w-full" ref={chatContainerRef}>
-        <div className="chat-messages space-y-3 overflow-auto h-full pb-48 pt-10">
-          {chatMessages.map((msg, idx) => (
-            <div key={idx} className="space-y-3">
-              {msg.sender === "user" ? (
-                <div>
-                  <p className=" text-3xl">{msg.content}</p>
-                </div>
-              ) : (
-                <div className="space-y-2 border-b pb-5 mb-5">
-                  <div className="flex items-center space-x-2">
-                    <div className="h-4 w-4 rounded-full bg-green-600"></div>{" "}
-                    <span>Answer</span>
-                  </div>
+      <ErrorBoundary
+        FallbackComponent={ErrorFallback}
+        onReset={() => {
+          // Reset the state of your app so the error doesn't happen again
+          setChatMessages([]);
+          setText("");
+        }}
+      >
+        <div className="w-full" ref={chatContainerRef}>
+          <div className="chat-messages space-y-3 overflow-auto h-full pb-48 pt-10">
+            {chatMessages.map((msg, idx) => (
+              <div key={idx} className="space-y-3">
+                {msg.sender === "user" ? (
                   <div>
-                    {/* <ReactMarkdown>{msg.content}</ReactMarkdown> */}
-                    <ReactMarkdown
-                      className="prose w-full max-w-screen-lg break-words pr-5 text-sm dark:prose-invert prose-p:leading-relaxed"
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        a: (props) => (
-                          <a
-                            {...props}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          />
-                        ),
-                      }}
-                    >
-                      {msg.content}
-                    </ReactMarkdown>
+                    <p className=" text-3xl">{msg.content}</p>
                   </div>
+                ) : (
+                  <div className="space-y-2 border-b pb-5 mb-5">
+                    <div className="flex items-center space-x-2">
+                      <div className="h-4 w-4 rounded-full bg-green-600"></div>{" "}
+                      <span>Answer</span>
+                    </div>
+                    <div>
+                      {/* <ReactMarkdown>{msg.content}</ReactMarkdown> */}
+                      <ReactMarkdown
+                        className="prose w-full max-w-screen-lg break-words pr-5 text-sm dark:prose-invert prose-p:leading-relaxed"
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          a: (props) => (
+                            <a
+                              {...props}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            />
+                          ),
+                        }}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {chatLoading && (
+              <div>
+                <span className="text-stone-500">NINA is thinking...</span>
+              </div>
+            )}
+          </div>
+
+          <div className="fixed w-full left-0 bottom-0 bg-white z-40 lg:hidden block">
+            <div className="p-5 ">
+              <div className="px-3 py-2 border rounded-full flex justify-center items-center shadow-md">
+                <input
+                  className="w-full outline-none"
+                  placeholder="Ask anything..."
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                />
+                <div
+                  className="cursor-pointer flex justify-center items-center bg-green-600 rounded-full p-3 hover:opacity-85"
+                  onClick={handleChat}
+                >
+                  <img src="/img/send.svg" className="h-3 w-3" />
                 </div>
-              )}
+              </div>
             </div>
-          ))}
+          </div>
 
-          {chatLoading && (
-            <div>
-              <span className="text-stone-500">NINA is thinking...</span>
-            </div>
-          )}
-        </div>
-
-        <div className="fixed w-full left-0 bottom-0 bg-white z-40 lg:hidden block">
-          <div className="p-5 ">
-            <div className="px-3 py-2 border rounded-full flex justify-center items-center shadow-md">
-              <input
-                className="w-full outline-none"
-                placeholder="Ask anything..."
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                onKeyPress={handleKeyPress}
-              />
-              <div
-                className="cursor-pointer flex justify-center items-center bg-green-600 rounded-full p-3 hover:opacity-85"
-                onClick={handleChat}
-              >
-                <img src="/img/send.svg" className="h-3 w-3" />
+          <div className="fixed w-full bottom-0 max-w-3xl bg-white z-40 lg:block hidden">
+            <div className="py-5">
+              <div className="px-3 py-2 border rounded-full flex justify-center items-center shadow-md">
+                <input
+                  className="w-full outline-none"
+                  placeholder="Ask anything..."
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                />
+                <div
+                  className="cursor-pointer flex justify-center items-center bg-green-600 rounded-full p-3 hover:opacity-85"
+                  onClick={handleChat}
+                >
+                  <img src="/img/send.svg" className="h-3 w-3" />
+                </div>
               </div>
             </div>
           </div>
         </div>
-
-        <div className="fixed w-full bottom-0 max-w-3xl bg-white z-40 lg:block hidden">
-          <div className="py-5">
-            <div className="px-3 py-2 border rounded-full flex justify-center items-center shadow-md">
-              <input
-                className="w-full outline-none"
-                placeholder="Ask anything..."
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                onKeyPress={handleKeyPress}
-              />
-              <div
-                className="cursor-pointer flex justify-center items-center bg-green-600 rounded-full p-3 hover:opacity-85"
-                onClick={handleChat}
-              >
-                <img src="/img/send.svg" className="h-3 w-3" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      </ErrorBoundary>
     );
 
   return (
-    <div className="pt-48 space-y-5 w-full">
-      <div className="flex justify-center text-center lg: px-10 px-0">
-        <p className="text-3xl font-medium">
-          Ask your personal health expert anything.
-        </p>
-      </div>
-      <div className="p-5 border rounded-xl space-y-10 shadow-xl">
-        <div>
-          <TextareaAutosize
-            className=" w-full outline-none"
-            placeholder="Ask anything..."
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyPress={handleKeyPress}
-          />
+    <ErrorBoundary
+      FallbackComponent={ErrorFallback}
+      onReset={() => {
+        // Reset the state of your app so the error doesn't happen again
+        setChatMessages([]);
+        setText("");
+      }}
+    >
+      <div className="pt-48 space-y-5 w-full">
+        <div className="flex justify-center text-center lg: px-10 px-0">
+          <p className="text-3xl font-medium">
+            Ask your personal health expert anything.
+          </p>
         </div>
-        <div className="flex justify-end items-center">
-          <div
-            className="h-10 w-10 flex justify-center items-center bg-green-600 rounded-full p-3 hover:opacity-85"
-            onClick={handleChat}
-          >
-            <img src="/img/send.svg" className="h-3 w-3" />
+        <div className="p-5 border rounded-xl space-y-10 shadow-xl">
+          <div>
+            <TextareaAutosize
+              className=" w-full outline-none"
+              placeholder="Ask anything..."
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyPress={handleKeyPress}
+            />
+          </div>
+          <div className="flex justify-end items-center">
+            <div
+              className="h-10 w-10 flex justify-center items-center bg-green-600 rounded-full p-3 hover:opacity-85"
+              onClick={handleChat}
+            >
+              <img src="/img/send.svg" className="h-3 w-3" />
+            </div>
           </div>
         </div>
       </div>
+    </ErrorBoundary>
+  );
+}
+
+function ErrorFallback({error, resetErrorBoundary}) {
+  return (
+    <div role="alert">
+      <p>Something went wrong:</p>
+      <pre>{error.message}</pre>
+      <button onClick={resetErrorBoundary}>Try again</button>
     </div>
   );
 }
